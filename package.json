@@ -1,0 +1,11 @@
+{
+  "name": "phones-scrapper",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "google-search-results-nodejs": "^2.1.0",
+    "venom-bot": "^4.3.7"
+  }
+}
