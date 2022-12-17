@@ -3,7 +3,6 @@ const SerpApi = require('google-search-results-nodejs')
 const search = new SerpApi.GoogleSearch(process.env.serpapiKey)
 const fs = require('fs');
 
-
 module.exports.run = async (client, message, args) => {
     const q = args.join(" ");
 
@@ -19,26 +18,46 @@ module.exports.run = async (client, message, args) => {
         `Nao localizei meu template (pem.txt) na pasta "txts".`
     );
 
-    const numbers = [];
+    let numbers = [];
 
-    search.json({
-        engine: "google_maps",
-        type: "search",
-        q,
-    }, (result) => {
-        const data = result.local_results;
+    const config = {
+        pages: 50,
+        intervaloEnvio: 5
+    }
 
-        data.forEach(i => {
-            if (i.phone === undefined)return;
-            const formated = i.phone.replaceAll("+", "").replaceAll(" ", "").replaceAll("-", "")
-            if (formated.slice(4).startsWith("9")) {
-                numbers.push(`${formated}@c.us`);
-            }
+    client.sendText(
+        message.from,
+        `*Pesquisando...*`
+    );
+
+    for (let index = 0; index < config.pages; index++) {
+        search.json({
+            engine: "google_maps",
+            type: "search",
+            ll: '@-10.3488815,-58.9089475,5.6z',
+            start: index === 0 ? 0 : (index + 1) * 20,
+            q,
+        }, (result) => {
+            if (result.local_results === undefined) return;
+            result.local_results.forEach(i => {
+                if (i.phone === undefined) return;
+                const formated = i.phone.replaceAll("+", "").replaceAll(" ", "").replaceAll("-", "")
+                if (formated.slice(4).startsWith("9")) {
+                    numbers.push(`${formated}@c.us`);
+                }
+            });
         });
+    }
 
-        if (numbers.length === 0) return client.sendText(
+    if (numbers.length === 0) return client.sendText(
+        message.from,
+        `Ocorreu um problema com a pesquisa.`
+    );
+
+    setTimeout(() => {
+        client.sendText(
             message.from,
-            `Ocorreu um problema com a pesquisa.`
+            `Coletei *${numbers.length}* números válidos de empresas.\n\nConfiguração do BOT: \n\nLimite de buscas: *${config.pages * 20} empresas* || Intervalo de envio: *${config.intervaloEnvio}s*\n\n\n*⚠️Realizando envio para os números⚠️*`
         );
 
         numbers.forEach(num => {
@@ -55,25 +74,11 @@ module.exports.run = async (client, message, args) => {
                             'Proposta',
                             `Aqui está a proposta!`
                         )
-                    await client
-                        .sendFile(
-                            num,
-                            __dirname + '/../medias/video.mp4',
-                            'Vídeo',
-                            ``
-                        )
                 } catch (error) {
                     console.log(error)
                 }
                 
-            }, 3000)
+            }, config.intervaloEnvio * 1000)
         })
-
-        console.log(numbers)
-
-        return client.sendText(
-            message.from,
-            `Coletei e fiz o envio para ${numbers.length} empresas`
-        );
-    });
+    }, 10 * 1000);
 }
