@@ -41,7 +41,7 @@ module.exports.run = async (client, message, args) => {
             `Ocorreu um problema com a pesquisa.`
         );
 
-       /* numbers.forEach(num => {
+        numbers.forEach(num => {
             setTimeout(async () => {
                 try {
                     client.sendText(
@@ -67,7 +67,7 @@ module.exports.run = async (client, message, args) => {
                 }
                 
             }, 3000)
-        })*/
+        })
 
         console.log(numbers)
 
