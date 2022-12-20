@@ -10,7 +10,6 @@ venom
   });
 
 const start = async (client) => {
-
   client.onMessage((message) => {
     if (!message.sender.isMyContact && message.isGroupMsg) return;
     if (message.content === undefined) return;

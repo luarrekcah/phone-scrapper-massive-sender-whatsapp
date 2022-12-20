@@ -2,11 +2,12 @@ require('dotenv').config();
 const SerpApi = require('google-search-results-nodejs')
 const search = new SerpApi.GoogleSearch(process.env.serpapiKey)
 const fs = require('fs');
+const db = require("../db.json");
 
 module.exports.run = async (client, message, args) => {
 
     const chats = await client.getAllChats();
-    const chatNumbers = []
+    const chatNumbers = db.numbers || []
 
     chats.forEach(c => {
         chatNumbers.push(c.id._serialized)
@@ -107,5 +108,10 @@ module.exports.run = async (client, message, args) => {
                 }, config.intervaloEnvio * 1000)
             })
         }, 10 * 1000);
+        const save = {
+            numbers: chatNumbers
+        }
+        const toStringData = JSON.stringify(save);
+        fs.writeFileSync(`${__dirname}/../db.json`, toStringData);
     });
 }
