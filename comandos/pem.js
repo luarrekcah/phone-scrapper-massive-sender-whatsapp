@@ -4,6 +4,16 @@ const search = new SerpApi.GoogleSearch(process.env.serpapiKey)
 const fs = require('fs');
 
 module.exports.run = async (client, message, args) => {
+
+    const chats = await client.getAllChats();
+    const chatNumbers = []
+
+    chats.forEach(c => {
+        chatNumbers.push(c.id._serialized)
+    });
+
+    console.log(chatNumbers);
+
     const q = args.join(" ");
 
     const text = fs.readFileSync(__dirname + '/../txts/pem.txt', 'utf8');
@@ -18,8 +28,9 @@ module.exports.run = async (client, message, args) => {
         `Nao localizei meu template (pem.txt) na pasta "txts".`
     );
 
-    let numbers = [];
-    const files = [];
+    const numbers = [],
+        removed = [],
+        files = [];
 
     fs.readdir(`${__dirname}/../medias`, (err, filesLoaded) => {
         console.log(filesLoaded)
@@ -52,24 +63,28 @@ module.exports.run = async (client, message, args) => {
                     if (i.phone === undefined) return;
                     const formated = i.phone.replaceAll("+", "").replaceAll(" ", "").replaceAll("-", "")
                     if (formated.slice(4).startsWith("9")) {
-                        numbers.push(`${formated}@c.us`);
+                        if (chatNumbers.includes(`${formated}@c.us`)) {
+                            removed.push(`${formated}@c.us`);
+                        } else {
+                            numbers.push(`${formated}@c.us`);
+                        }
                     }
                 });
             });
         }
-    
+
         setTimeout(() => {
-    
+
             if (numbers.length === 0) return client.sendText(
                 message.from,
                 `Ocorreu um problema com a pesquisa.`
             );
-    
+
             client.sendText(
                 message.from,
-                `Coletei *${numbers.length}* números válidos de empresas.\n\nConfiguração do BOT: \n\nLimite de buscas: *${config.pages * 20} empresas* || Intervalo de envio: *${config.intervaloEnvio}s*\n\n\n*⚠️Realizando envio para os números⚠️*`
+                `Coletei *${numbers.length}* números válidos de empresas. ${removed.length} foram removidos porque estão repetidos.\n\nConfiguração do BOT: \n\nLimite de buscas: *${config.pages * 20} empresas* || Intervalo de envio: *${config.intervaloEnvio}s*\n\n\n*⚠️Realizando envio para os números⚠️*`
             );
-    
+
             numbers.forEach(num => {
                 setTimeout(async () => {
                     try {
